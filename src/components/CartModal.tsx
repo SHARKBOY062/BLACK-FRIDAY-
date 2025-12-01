@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { X, Minus, Plus, Copy } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useEffect, useState } from "react";
@@ -5,8 +6,43 @@ import { useEffect, useState } from "react";
 const fallbackImg =
   "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/200px-No_image_available.svg.png";
 
-// ORDER BUMP
-const injections = [
+// ORDER BUMP TYPES
+interface BumpItem {
+  name: string;
+  price: number;
+  image: string;
+}
+
+// CART ITEM TYPE
+interface CartItem {
+  name: string;
+  price: number;
+  quantity: number;
+  image: string;
+}
+
+// FORM TYPE
+interface FormData {
+  nome: string;
+  cpf: string;
+  telefone: string;
+  email: string;
+  cep: string;
+  endereco: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+}
+
+// PROPS
+interface CartModalProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+const injections: BumpItem[] = [
   {
     name: "Ozempic Caneta 2mg/3ml",
     price: 635.94,
@@ -20,7 +56,7 @@ const injections = [
   },
 ];
 
-const nootropics = [
+const nootropics: BumpItem[] = [
   {
     name: "Pholia Magra 500mg",
     price: 40.45,
@@ -33,7 +69,7 @@ const nootropics = [
   },
 ];
 
-function getOrderBump(cart) {
+function getOrderBump(cart: CartItem[]): BumpItem {
   if (!cart.length) return nootropics[0];
 
   const last = cart[cart.length - 1].name.toLowerCase();
@@ -43,41 +79,34 @@ function getOrderBump(cart) {
     last.includes("orlistat") ||
     last.includes("psyllium") ||
     last.includes("quitosana")
-  )
+  ) {
     return injections[Math.floor(Math.random() * injections.length)];
+  }
 
   return nootropics[Math.floor(Math.random() * nootropics.length)];
 }
 
-export default function CartModal({ open, onClose }) {
-  const { cart, addToCart, removeFromCart, clearCart, total } = useCart();
+const CartModal: FC<CartModalProps> = ({ open, onClose }) => {
+  const { cart, addToCart, clearCart, total } = useCart();
   const bump = getOrderBump(cart);
 
-  // Cupom
   const [couponApplied, setCouponApplied] = useState(false);
-  const couponDiscount = couponApplied ? 0.2 : 0; // 20% cupom
+  const couponDiscount = couponApplied ? 0.2 : 0;
   const totalAfterCoupon = total * (1 - couponDiscount);
 
-  // PIX dá 15% OFF
   const pixDiscount = 0.15;
   const totalPix = totalAfterCoupon * (1 - pixDiscount);
 
-  // Steps
   const [step, setStep] = useState(0);
-
-  // Timers
   const [timeLeft, setTimeLeft] = useState(600);
 
-  // PIX modal
   const [pixOpen, setPixOpen] = useState(false);
   const [pixPayload, setPixPayload] = useState("");
   const [qrCodeImage, setQrCodeImage] = useState("");
 
-  const [pixTimer, setPixTimer] = useState(600);
   const [pixConfirmAvailable, setPixConfirmAvailable] = useState(false);
 
-  // FORM
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormData>({
     nome: "",
     cpf: "",
     telefone: "",
@@ -91,43 +120,42 @@ export default function CartModal({ open, onClose }) {
     estado: "",
   });
 
-  const updateForm = (field, value) =>
+  const updateForm = (field: keyof FormData, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  // Masks
-  const maskCPF = (v) =>
+  const maskCPF = (v: string) =>
     v
       .replace(/\D/g, "")
       .replace(/(\d{3})(\d)/, "$1.$2")
       .replace(/(\d{3})(\d)/, "$1.$2")
       .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 
-  const maskPhone = (v) =>
+  const maskPhone = (v: string) =>
     v
       .replace(/\D/g, "")
       .replace(/(\d{2})(\d)/, "($1) $2")
       .replace(/(\d{5})(\d)/, "$1-$2");
 
-  const maskCEP = (v) =>
+  const maskCEP = (v: string) =>
     v.replace(/\D/g, "").replace(/(\d{5})(\d)/, "$1-$2");
 
-  // CEP auto
+  // CEP automatic fill
   useEffect(() => {
     if (form.cep.length === 9) {
       fetch(`https://viacep.com.br/ws/${form.cep.replace("-", "")}/json/`)
         .then((r) => r.json())
         .then((d) => {
           if (!d.erro) {
-            updateForm("endereco", d.logradouro);
-            updateForm("bairro", d.bairro);
-            updateForm("cidade", d.localidade);
-            updateForm("estado", d.uf);
+            updateForm("endereco", d.logradouro || "");
+            updateForm("bairro", d.bairro || "");
+            updateForm("cidade", d.localidade || "");
+            updateForm("estado", d.uf || "");
           }
         });
     }
   }, [form.cep]);
 
-  // Timer carrinho
+  // Cart timer
   useEffect(() => {
     if (!open) return;
 
@@ -140,16 +168,14 @@ export default function CartModal({ open, onClose }) {
     return () => clearInterval(i);
   }, [open]);
 
-  // Timer PIX
+  // PIX confirmation timer (2 min)
   useEffect(() => {
     if (!pixOpen) return;
 
-    setPixTimer(600);
     setPixConfirmAvailable(false);
     let elapsed = 0;
 
     const i = setInterval(() => {
-      setPixTimer((t) => (t > 0 ? t - 1 : 0));
       elapsed++;
       if (elapsed >= 120) setPixConfirmAvailable(true);
     }, 1000);
@@ -157,7 +183,6 @@ export default function CartModal({ open, onClose }) {
     return () => clearInterval(i);
   }, [pixOpen]);
 
-  // Fake API PIX
   async function generatePix() {
     const fake = {
       payload:
@@ -168,11 +193,9 @@ export default function CartModal({ open, onClose }) {
 
     setPixPayload(fake.payload);
     setQrCodeImage(fake.qrCodeImage);
-
     setPixOpen(true);
   }
 
-  // MONTAR MENSAGEM WHATSAPP
   const messageWhatsapp = () => {
     const itemsText = cart
       .map(
@@ -183,8 +206,7 @@ export default function CartModal({ open, onClose }) {
       )
       .join("\n");
 
-    return encodeURIComponent(
-      `
+    return encodeURIComponent(`
 🛒 *NOVO PEDIDO*
 
 ${itemsText}
@@ -192,29 +214,24 @@ ${itemsText}
 ———————————
 📦 *Total final:* R$ ${totalAfterCoupon.toFixed(2)}
 🏷 Cupom aplicado: ${couponApplied ? "SIM" : "NÃO"}
-💳 Quero finalizar o pagamento pelo WhatsApp!
 
 *Dados do cliente:*
 Nome: ${form.nome}
 CPF: ${form.cpf}
 Telefone: ${form.telefone}
-E-mail: ${form.email}
+Email: ${form.email}
 CEP: ${form.cep}
 Endereço: ${form.endereco}, Nº ${form.numero}
 Bairro: ${form.bairro}
 Cidade: ${form.cidade} / ${form.estado}
-`
-    );
+`);
   };
 
   if (!open) return null;
 
   return (
     <>
-      {/* ===================================== */}
       {/* MODAL PRINCIPAL */}
-      {/* ===================================== */}
-
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end md:items-center justify-center z-50 p-4">
         <div className="bg-white w-full max-w-md rounded-t-3xl md:rounded-2xl relative">
           <button
@@ -250,7 +267,9 @@ Cidade: ${form.cidade} / ${form.estado}
 
                   <div className="flex items-center gap-2 mt-2">
                     <button
-                      onClick={() => addToCart({ ...item, quantity: -1 })}
+                      onClick={() =>
+                        addToCart({ ...item, quantity: -1 })
+                      }
                       className="bg-gray-200 px-2 py-1 rounded"
                     >
                       <Minus size={14} />
@@ -259,7 +278,9 @@ Cidade: ${form.cidade} / ${form.estado}
                     <span>{item.quantity}</span>
 
                     <button
-                      onClick={() => addToCart({ ...item, quantity: 1 })}
+                      onClick={() =>
+                        addToCart({ ...item, quantity: 1 })
+                      }
                       className="bg-gray-200 px-2 py-1 rounded"
                     >
                       <Plus size={14} />
@@ -319,7 +340,7 @@ Cidade: ${form.cidade} / ${form.estado}
               </button>
             ) : (
               <p className="text-green-600 font-bold mb-4 text-center">
-                Cupom BLACKDROGASIL aplicado! –20%
+                Cupom BLACKDROGASIL aplicado!
               </p>
             )}
 
@@ -341,7 +362,7 @@ Cidade: ${form.cidade} / ${form.estado}
               </button>
             )}
 
-            {/* BOTÃO CHECKOUT */}
+            {/* CHECKOUT */}
             <button
               onClick={() => setStep(1)}
               className="w-full py-3 rounded-xl font-bold text-lg bg-green-700 text-white hover:bg-green-800 transition mb-4"
@@ -349,7 +370,7 @@ Cidade: ${form.cidade} / ${form.estado}
               Finalizar compra
             </button>
 
-            {/* BOTÃO WHATSAPP VISÍVEL AQUI TAMBÉM */}
+            {/* WHATSAPP */}
             <a
               href={`https://wa.me/5511999999999?text=${messageWhatsapp()}`}
               target="_blank"
@@ -365,8 +386,7 @@ Cidade: ${form.cidade} / ${form.estado}
         </div>
       </div>
 
-      {/* ====================== STEPS ====================== */}
-
+      {/* STEPS */}
       {step > 0 && step <= 3 && !pixOpen && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[999] p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg relative">
@@ -377,7 +397,6 @@ Cidade: ${form.cidade} / ${form.estado}
               <X size={22} />
             </button>
 
-            {/* ETAPAS */}
             <div className="flex justify-center gap-3 mb-6">
               {[1, 2, 3].map((s) => (
                 <div
@@ -391,7 +410,7 @@ Cidade: ${form.cidade} / ${form.estado}
               ))}
             </div>
 
-            {/* ETAPA 1 – Dados pessoais */}
+            {/* STEP 1 */}
             {step === 1 && (
               <div className="space-y-4">
                 <h2 className="text-xl font-bold text-center text-red-600">
@@ -442,7 +461,7 @@ Cidade: ${form.cidade} / ${form.estado}
               </div>
             )}
 
-            {/* ETAPA 2 – Endereço */}
+            {/* STEP 2 */}
             {step === 2 && (
               <div className="space-y-4">
                 <h2 className="text-xl font-bold text-center text-red-600">
@@ -532,7 +551,7 @@ Cidade: ${form.cidade} / ${form.estado}
               </div>
             )}
 
-            {/* ETAPA 3 – PIX */}
+            {/* STEP 3 */}
             {step === 3 && (
               <div className="text-center space-y-4">
                 <h2 className="text-xl font-bold text-red-600">
@@ -543,7 +562,6 @@ Cidade: ${form.cidade} / ${form.estado}
                   Escolha uma forma de pagamento abaixo:
                 </p>
 
-                {/* PIX */}
                 <button
                   onClick={async () => {
                     setStep(0);
@@ -554,9 +572,8 @@ Cidade: ${form.cidade} / ${form.estado}
                   💸 Pagar no PIX (15% OFF)
                 </button>
 
-                {/* WHATSAPP */}
                 <a
-                  href={`https://wa.me/5511999999999?text=${messageWhatsapp()}`}
+                  href={`https://wa.me/5511999999999999?text=${messageWhatsapp()}`}
                   target="_blank"
                   className="w-full mt-3 flex items-center justify-center gap-3 bg-[#25D366] text-white py-3 rounded-xl font-bold text-lg hover:bg-[#1ebe5d]"
                 >
@@ -572,8 +589,7 @@ Cidade: ${form.cidade} / ${form.estado}
         </div>
       )}
 
-      {/* ====================== PIX POPUP ====================== */}
-
+      {/* PIX POPUP */}
       {pixOpen && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[999] p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md relative">
@@ -584,18 +600,13 @@ Cidade: ${form.cidade} / ${form.estado}
               <X size={26} />
             </button>
 
-            <h2 className="text-2xl font-bold text-center">
-              Pagamento via PIX
-            </h2>
+            <h2 className="text-2xl font-bold text-center">Pagamento via PIX</h2>
 
             <p className="text-center text-green-600 font-semibold mb-4">
               Você ganhou 15% de desconto pagando no PIX!
             </p>
 
-            <img
-              src={qrCodeImage}
-              className="w-52 h-52 mx-auto mb-4"
-            />
+            <img src={qrCodeImage} className="w-52 h-52 mx-auto mb-4" />
 
             <p className="text-sm font-medium mb-1">Código copia e cola:</p>
 
@@ -623,9 +634,7 @@ Cidade: ${form.cidade} / ${form.estado}
               <a
                 target="_blank"
                 href={`https://wa.me/5511999999999?text=${encodeURIComponent(
-                  `PAGAMENTO REALIZADO!\n\nValor pago: R$ ${totalPix.toFixed(
-                    2
-                  )}`
+                  `PAGAMENTO REALIZADO!\n\nValor pago: R$ ${totalPix.toFixed(2)}`
                 )}`}
                 className="block w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold text-lg text-center"
               >
@@ -644,4 +653,6 @@ Cidade: ${form.cidade} / ${form.estado}
       )}
     </>
   );
-}
+};
+
+export default CartModal;

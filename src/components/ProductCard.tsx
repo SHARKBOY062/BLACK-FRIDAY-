@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { MessageCircle, ShoppingCart } from "lucide-react";
 import { useCart } from "../context/CartContext";
@@ -11,32 +12,31 @@ interface Props {
   timer?: boolean;
 }
 
-export default function ProductCard({
+const ProductCard: FC<Props> = ({
   name,
   image,
   oldPrice,
   discountPercent,
   lightning = false,
   timer = false,
-}: Props) {
+}) => {
   const { addToCart } = useCart();
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState<number>(1);
 
   const newPrice = Number((oldPrice * (1 - discountPercent)).toFixed(2));
-
   const rating = Number((Math.random() * 1.5 + 3.5).toFixed(1));
-
-  const [seconds, setSeconds] = useState(3600);
+  const [seconds, setSeconds] = useState<number>(3600);
 
   useEffect(() => {
     if (!timer) return;
     const interval = setInterval(() => {
       setSeconds((s) => (s > 0 ? s - 1 : 0));
     }, 1000);
+
     return () => clearInterval(interval);
   }, [timer]);
 
-  const formatTime = () => {
+  const formatTime = (): string => {
     const h = String(Math.floor(seconds / 3600)).padStart(2, "0");
     const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
     const s = String(seconds % 60).padStart(2, "0");
@@ -58,7 +58,7 @@ ${timer ? `⏳ Oferta expira em: ${formatTime()}` : ""}
 `);
 
   return (
-    <div className="relative bg-white border rounded-xl  p-4 hover: transition flex flex-col">
+    <div className="relative bg-white border rounded-xl p-4 flex flex-col">
 
       {lightning && (
         <span className="absolute top-2 left-2 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded animate-pulse">
@@ -75,7 +75,6 @@ ${timer ? `⏳ Oferta expira em: ${formatTime()}` : ""}
       <img src={image} className="w-full h-40 object-contain mb-3" />
 
       <p className="font-medium text-sm min-h-[40px]">{name}</p>
-
       <p className="text-xs text-yellow-500">⭐ {rating}/5.0</p>
 
       <p className="line-through text-gray-500 text-xs">R$ {oldPrice}</p>
@@ -105,6 +104,7 @@ ${timer ? `⏳ Oferta expira em: ${formatTime()}` : ""}
             name,
             price: newPrice,
             quantity,
+            image, // ← Corrigido!
           })
         }
         className="mt-3 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-full flex items-center justify-center gap-2"
@@ -123,4 +123,6 @@ ${timer ? `⏳ Oferta expira em: ${formatTime()}` : ""}
       </a>
     </div>
   );
-}
+};
+
+export default ProductCard;

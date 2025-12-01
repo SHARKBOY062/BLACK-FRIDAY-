@@ -1,6 +1,11 @@
+import type { FC } from "react";
 import { Tag } from "lucide-react";
 
-export default function BlackFridayFloat({ onClick }) {
+interface BlackFridayFloatProps {
+  onClick: () => void;
+}
+
+const BlackFridayFloat: FC<BlackFridayFloatProps> = ({ onClick }) => {
   return (
     <button
       onClick={onClick}
@@ -8,7 +13,6 @@ export default function BlackFridayFloat({ onClick }) {
         fixed bottom-5 right-5
         bg-black text-white font-bold
         px-5 py-3 rounded-2xl
-         
         flex items-center gap-2
         animate-pulse
         z-50
@@ -18,4 +22,6 @@ export default function BlackFridayFloat({ onClick }) {
       BLACK FRIDAY
     </button>
   );
-}
+};
+
+export default BlackFridayFloat;

@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState } from "react";
+import type { ReactNode } from "react";
 
 interface CartItem {
   name: string;
@@ -20,9 +21,7 @@ const CartContext = createContext<CartContextType>({} as CartContextType);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  /* =============================
-     ADD / REMOVE
-  ============================= */
+  /* ADD */
   const addToCart = (item: CartItem) => {
     setCart((prev) => {
       const existing = prev.find((p) => p.name === item.name);
@@ -39,17 +38,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  /* REMOVE */
   const removeFromCart = (name: string) => {
     setCart((prev) => prev.filter((p) => p.name !== name));
   };
 
+  /* CLEAR */
   const clearCart = () => {
     setCart([]);
   };
 
-  /* =============================
-     TOTAL CALCULADO CORRETAMENTE
-  ============================= */
+  /* TOTAL */
   const total = cart.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
@@ -64,9 +63,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/* =============================
-   HOOK
-============================= */
+/* HOOK */
 export function useCart() {
   return useContext(CartContext);
 }
