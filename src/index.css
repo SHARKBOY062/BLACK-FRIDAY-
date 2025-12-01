@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================= */
+/* GLOBAL – remove scroll e põe fundo preto */
+/* ========================= */
+html, body {
+  overflow-x: hidden !important;
+  background: #000; /* fundo preto real */
+}
+
+/* -------------------------- */
+/* Scrollbar personalizado */
+/* -------------------------- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #b91c1c;
+  border-radius: 8px;
+}
+
+/* -------------------------- */
+/* Shine Animation (WhatsApp Button) */
+/* -------------------------- */
+@keyframes slide-shine {
+  0% { transform: translateX(-150%); }
+  50% { transform: translateX(150%); }
+  100% { transform: translateX(150%); }
+}
+.animate-slide-shine {
+  animation: slide-shine 2s ease-in-out infinite;
+}
+
+/* -------------------------- */
+/* Fake Notifications (slide-up) */
+/* -------------------------- */
+@keyframes slide-up {
+  0% { opacity: 0; transform: translateY(40px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out;
+}
+
+/* -------------------------- */
+/* Swiper Bullets estilo Drogasil */
+/* -------------------------- */
+.swiper-pagination {
+  bottom: 18px !important;
+  text-align: center !important;
+}
+
+.swiper-pagination-bullet {
+  width: 7px !important;
+  height: 7px !important;
+  background: #fff !important;
+  opacity: 0.35 !important;
+  margin: 0 5px !important;
+  border-radius: 50% !important;
+  transition: opacity .25s ease, transform .25s ease;
+}
+
+.swiper-pagination-bullet-active {
+  opacity: 1 !important;
+  transform: scale(1.35);
+}
+
+/* -------------------------- */
+/* Banner Container – igual Drogasil */
+/* -------------------------- */
+.banner-container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 14px;
+}
+
+/* -------------------------- */
+/* Banner sem corte / sem zoom */
+/* -------------------------- */
+.swiper-slide img {
+  width: 100%;
+  height: auto !important;
+  object-fit: contain !important;
+  display: block;
+  border-radius: 24px;
+  background: #000; /* fundo atrás dos banners */
+}
+footer, footer::before, div { border: none !important; }
+footer, footer::before, div { border: none !important; }
